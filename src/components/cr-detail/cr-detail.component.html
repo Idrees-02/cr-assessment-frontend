@@ -1,0 +1,111 @@
+<section class="cr-detail">
+	<p *ngIf="state.status === 'idle'" class="cr-detail__idle">Select a change request to review.</p>
+
+	<p *ngIf="state.status === 'loading'" class="cr-detail__loading" role="status">Loading change request…</p>
+
+	<div *ngIf="state.status === 'error'" class="cr-detail__error" role="alert">
+		<p>Couldn't load this change request: {{ state.error }}</p>
+		<button type="button" (click)="load()">Retry</button>
+	</div>
+
+	<ng-container *ngIf="state.status === 'loaded' && detail as cr">
+		<header class="cr-detail__header">
+			<h2>{{ cr.title }}</h2>
+			<p class="cr-detail__meta">{{ cr.id }} · Agreement {{ cr.agreementId }}</p>
+			<span class="cr-status" [attr.data-status]="cr.status">{{ cr.status }}</span>
+			<p class="cr-detail__totals">
+				<span class="cr-detail__baseline-total">{{ fmt(cr.baselineTotal) }}</span> →
+				<span class="cr-detail__new-total">{{ fmt(cr.newTotal) }}</span>
+				<strong class="cr-detail__delta" [attr.data-sign]="cr.delta > 0 ? 'up' : cr.delta < 0 ? 'down' : 'zero'"
+					>(Δ {{ cr.delta > 0 ? '+' : '' }}{{ fmt(cr.delta) }})</strong
+				>
+			</p>
+		</header>
+
+		<!-- Diff / preview panel -->
+		<section class="cr-diff">
+			<h3>Proposed changes</h3>
+			<p *ngIf="!diff.length" class="cr-diff__empty">This change request has no line items.</p>
+			<table *ngIf="diff.length" class="cr-diff__table">
+				<thead>
+					<tr>
+						<th>SKU</th>
+						<th>Change</th>
+						<th>Before</th>
+						<th>After</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of diff" class="cr-diff__row" [attr.data-kind]="row.kind">
+						<td>{{ row.sku }}</td>
+						<td class="cr-diff__kind">{{ row.kind }}</td>
+						<td class="cr-diff__before">
+							<ng-container *ngIf="row.baseline as b; else none">
+								{{ b.description }}<br />{{ b.quantity }} × {{ fmt(b.unitPrice) }}
+							</ng-container>
+						</td>
+						<td class="cr-diff__after">
+							<ng-container *ngIf="row.proposed as p; else none">
+								{{ p.description }}<br />{{ p.quantity }} × {{ fmt(p.unitPrice) }}
+							</ng-container>
+						</td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr class="cr-diff__totals">
+						<th colspan="2">Total</th>
+						<td>{{ fmt(cr.baselineTotal) }}</td>
+						<td>{{ fmt(cr.newTotal) }}</td>
+					</tr>
+				</tfoot>
+			</table>
+			<ng-template #none>—</ng-template>
+		</section>
+
+		<!-- Approval timeline -->
+		<section class="cr-timeline">
+			<h3>Timeline</h3>
+			<p *ngIf="!timeline.length" class="cr-timeline__empty">No history recorded yet.</p>
+			<ol *ngIf="timeline.length" class="cr-timeline__list">
+				<li *ngFor="let entry of timeline" class="cr-timeline__entry">
+					<span class="cr-timeline__action">{{ entry.action }}</span>
+					by <span class="cr-timeline__by">{{ entry.byUserId }}</span>
+					<time class="cr-timeline__at" [attr.datetime]="entry.at">{{ entry.at | date : 'medium' : 'UTC' }} UTC</time>
+					<span *ngIf="entry.note" class="cr-timeline__note">“{{ entry.note }}”</span>
+				</li>
+			</ol>
+		</section>
+
+		<!-- Actions -->
+		<section class="cr-actions">
+			<h3>Review</h3>
+			<p *ngIf="actionError" class="cr-actions__error" role="alert">{{ actionError }}</p>
+
+			<p *ngIf="!isActionable" class="cr-actions__closed">No review actions — this change request is {{ cr.status }}.</p>
+
+			<ng-container *ngIf="isActionable">
+				<p *ngIf="!hasActionPermission" class="cr-actions__readonly">You have read-only access to this change request.</p>
+
+				<button type="button" class="cr-actions__approve" [disabled]="!canApprove || !!submitting" (click)="approve()">
+					{{ submitting === 'approve' ? 'Approving…' : 'Approve' }}
+				</button>
+
+				<div class="cr-actions__reject" *ngIf="canReject">
+					<label>
+						Reason for rejection
+						<textarea class="cr-actions__reason" [formControl]="rejectControl" [readOnly]="!!submitting"></textarea>
+					</label>
+					<p *ngIf="rejectControl.invalid && rejectControl.touched" class="cr-actions__reason-error" role="alert">Please enter a reason.</p>
+					<button
+						type="button"
+						class="cr-actions__reject-btn"
+						[disabled]="!canReject || !!submitting || rejectControl.invalid"
+						(click)="reject()"
+					>
+						{{ submitting === 'reject' ? 'Rejecting…' : 'Reject' }}
+					</button>
+				</div>
+			</ng-container>
+		</section>
+	</ng-container>
+</section>
