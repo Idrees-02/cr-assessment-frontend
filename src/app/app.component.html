@@ -1,7 +1,13 @@
 <header class="app-header">
-	<h1>Change Request Review</h1>
-	<label>
-		Acting as:
+	<div class="app-brand">
+		<span class="app-brand__mark" aria-hidden="true">CR</span>
+		<div>
+			<h1>Change Request Review</h1>
+			<p class="app-brand__sub">Purchase agreement amendments</p>
+		</div>
+	</div>
+	<label class="app-user">
+		<span class="app-user__label">Acting as</span>
 		<select (change)="switchUser($any($event.target).value)">
 			<option *ngFor="let key of userKeys" [value]="key" [selected]="session.user.id === users[key]?.id">{{ key }}</option>
 		</select>

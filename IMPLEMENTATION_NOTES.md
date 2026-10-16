@@ -91,8 +91,12 @@ logic is testable without the DOM.
 
 ## 6. Where I used AI
 
-<!-- Fill in honestly before submitting, e.g. which parts were generated/assisted and what you
-reviewed, changed, or verified yourself. -->
+I used Claude (AI assistant) alot in this task, the brief said its allowed so I was open with it.
+First I used it to understand the scaffold and the brief faster, the models / fixtures / mock api etc.
+Then it helped me write most of the code, the diff fix, the permissions helper, approve and reject flow in the detail page and the list filter. also the new css styling.
+Most of the tests also was drafted with it, I went over them to make sure they test what the user actualy sees (disabled buttons, error messages, order of timeline) not internal stuff.
+I ran npm test, lint, build and prettier my self and tried the app with the 3 users (approver, viewer, otherOrg).
+The decisions in section 5 (assumptions) and how I split the commits are mine.
 
 ## 7. What I'd improve with more time
 
